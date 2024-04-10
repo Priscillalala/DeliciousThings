@@ -34,7 +34,7 @@ using RoR2.Skills;
 namespace DeliciousThings;
 
 [BepInPlugin(GUID, NAME, VERSION)]
-public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
+public partial class Delicious : BaseUnityPlugin, IContentPackProvider
 {
     public const string
         NAME = "DeliciousThings",
@@ -50,8 +50,8 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
     public static ConfigFile EquipmentConfig { get; private set; }
     public static ConfigFile ItemsConfig { get; private set; }
     public static ConfigFile SkillsConfig { get; private set; }
-    protected static AsyncOperationHandle<IDictionary<string, ItemDisplayRuleSet>> IDRS { get; private set; }
-    protected static Dictionary<EquipmentDef, Func<EquipmentSlot, bool>> EquipmentActivationFunctions { get; private set; } = [];
+    public static AsyncOperationHandle<IDictionary<string, ItemDisplayRuleSet>> IDRS { get; private set; }
+    public static Dictionary<EquipmentDef, Func<EquipmentSlot, bool>> EquipmentActivationFunctions { get; private set; } = [];
 
     public string identifier => GUID;
 
@@ -78,7 +78,7 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
 
         contentPack.expansionDefs.Add([ScriptableObject.CreateInstance<Expansion>()]);
 
-        IEnumerable<Type> exportedTypes = typeof(DeliciousContent).Assembly.ExportedTypes;
+        IEnumerable<Type> exportedTypes = typeof(Delicious).Assembly.ExportedTypes;
 
         ItemDef[] items = exportedTypes
             .Where(x => x.IsSubclassOf(typeof(ItemDef)) && !x.IsAbstract)

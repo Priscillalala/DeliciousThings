@@ -1,4 +1,4 @@
-﻿using static DeliciousThings.DeliciousContent.Disembowel;
+﻿using DeliciousThings.Skills;
 
 namespace EntityStates.Croco;
 
@@ -9,7 +9,7 @@ public class SuperBite : BasicMeleeAttack
     public SuperBite() : base()
     {
         baseDuration = 1.2f;
-        damageCoefficient = Instance.damageCoefficient;
+        damageCoefficient = Disembowel.Instance.damageCoefficient;
         hitBoxGroupName = "Slash";
         hitEffectPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Treebot/OmniImpactVFXSlashSyringe.prefab").WaitForCompletion();
         procCoefficient = 1f;
@@ -106,7 +106,7 @@ public class SuperBite : BasicMeleeAttack
         if (currentResetAttackCount >= 2)
         {
             overlapAttack.impactSound = Addressables.LoadAssetAsync<NetworkSoundEventDef>("RoR2/Base/Croco/nseAcridBiteHit.asset").WaitForCompletion().index;
-            overlapAttack.AddModdedDamageType(Instance.superBleedOnHit);
+            overlapAttack.AddModdedDamageType(Disembowel.Instance.superBleedOnHit);
         }
         overlapAttack.ResetIgnoredHealthComponents();
     }
@@ -119,7 +119,7 @@ public class SuperBite : BasicMeleeAttack
             Transform transform = base.FindModelChild("MouthMuzzle");
             if (transform && !secondSwingEffectInstance)
             {
-                secondSwingEffectInstance = UnityEngine.Object.Instantiate(Instance.crocoSuperBiteEffect, transform);
+                secondSwingEffectInstance = UnityEngine.Object.Instantiate(Disembowel.Instance.crocoSuperBiteEffect, transform);
                 secondSwingEffectInstance.transform.forward = characterDirection.forward;
                 if (secondSwingEffectInstance.TryGetComponent(out ScaleParticleSystemDuration scaleParticleSystemDuration))
                 {

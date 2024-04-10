@@ -1,74 +1,71 @@
 ﻿using RoR2.Achievements;
+using DeliciousThings.Equipment;
 
-namespace DeliciousThings;
+namespace DeliciousThings.Achievements;
 
-partial class DeliciousContent
+public partial class CompleteMultiplayerUnknownEnding : AchievementDef, Delicious.IStaticContent
 {
-    public partial class CompleteMultiplayerUnknownEnding : AchievementDef, IStaticContent
+    public static CompleteMultiplayerUnknownEnding Instance { get; private set; }
+    public static UnlockableDef Unlockable => GodlessEye.Instance?.unlockableDef;
+
+    public CompleteMultiplayerUnknownEnding() : base()
     {
-        public static CompleteMultiplayerUnknownEnding Instance { get; private set; }
-
-        public UnlockableDef unlockableDef = GodlessEye.Instance?.unlockableDef;
-
-        public CompleteMultiplayerUnknownEnding() : base()
+        if (Unlockable)
         {
-            if (unlockableDef)
-            {
-                Instance = this;
+            Instance = this;
 
-                // Match achievement identifiers from FreeItemFriday
-                identifier = "CompleteMultiplayerUnknownEnding";
-                this.AutoPopulateTokens();
-                unlockableDef.PopulateUnlockStrings(this);
-                unlockableRewardIdentifier = unlockableDef.cachedName;
-                type = typeof(Achievement);
-                serverTrackerType = typeof(ServerAchievement);
-            }
+            // Match achievement identifiers from FreeItemFriday
+            identifier = "CompleteMultiplayerUnknownEnding";
+            this.AutoPopulateTokens();
+            Unlockable.PopulateUnlockStrings(this);
+            unlockableRewardIdentifier = Unlockable.cachedName;
+            type = typeof(Achievement);
+            serverTrackerType = typeof(ServerAchievement);
+        }
+    }
+
+    public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
+    {
+        var texCompleteMultiplayerUnknownEndingIcon = assets.LoadAssetAsync<Sprite>("texCompleteMultiplayerUnknownEndingIcon");
+
+        yield return texCompleteMultiplayerUnknownEndingIcon;
+        SetAchievedIcon((Sprite)texCompleteMultiplayerUnknownEndingIcon.asset);
+    }
+
+    public class Achievement : BaseAchievement
+    {
+        public override void OnInstall()
+        {
+            base.OnInstall();
+            SetServerTracked(true);
         }
 
-        public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
+        public override void OnUninstall()
         {
-            var texCompleteMultiplayerUnknownEndingIcon = assets.LoadAssetAsync<Sprite>("texCompleteMultiplayerUnknownEndingIcon");
+            SetServerTracked(false);
+            base.OnUninstall();
+        }
+    }
 
-            yield return texCompleteMultiplayerUnknownEndingIcon;
-            SetAchievedIcon((Sprite)texCompleteMultiplayerUnknownEndingIcon.asset);
+    public class ServerAchievement : BaseServerAchievement
+    {
+        public override void OnInstall()
+        {
+            base.OnInstall();
+            Run.onServerGameOver += OnServerGameOver;
         }
 
-        public class Achievement : BaseAchievement
+        public override void OnUninstall()
         {
-            public override void OnInstall()
-            {
-                base.OnInstall();
-                SetServerTracked(true);
-            }
-
-            public override void OnUninstall()
-            {
-                SetServerTracked(false);
-                base.OnUninstall();
-            }
+            base.OnInstall();
+            Run.onServerGameOver -= OnServerGameOver;
         }
 
-        public class ServerAchievement : BaseServerAchievement
+        public void OnServerGameOver(Run run, GameEndingDef gameEndingDef)
         {
-            public override void OnInstall()
+            if ((gameEndingDef == RoR2Content.GameEndings.ObliterationEnding || gameEndingDef == RoR2Content.GameEndings.LimboEnding) && RoR2Application.isInMultiPlayer)
             {
-                base.OnInstall();
-                Run.onServerGameOver += OnServerGameOver;
-            }
-
-            public override void OnUninstall()
-            {
-                base.OnInstall();
-                Run.onServerGameOver -= OnServerGameOver;
-            }
-
-            public void OnServerGameOver(Run run, GameEndingDef gameEndingDef)
-            {
-                if ((gameEndingDef == RoR2Content.GameEndings.ObliterationEnding || gameEndingDef == RoR2Content.GameEndings.LimboEnding) && RoR2Application.isInMultiPlayer)
-                {
-                    Grant();
-                }
+                Grant();
             }
         }
     }

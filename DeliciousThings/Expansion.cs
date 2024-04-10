@@ -4,30 +4,27 @@ using RoR2.Items;
 
 namespace DeliciousThings;
 
-partial class DeliciousContent
+public partial class Expansion : ExpansionDef, Delicious.IStaticContent
 {
-    public partial class Expansion : ExpansionDef, IStaticContent
+    public static Expansion Instance { get; private set; }
+
+    public void Awake()
     {
-        public static Expansion Instance { get; private set; }
+        Instance = this;
 
-        public void Awake()
-        {
-            Instance = this;
+        name = "DeliciousThings";
+        nameToken = "DELICIOUSTHINGS_NAME";
+        descriptionToken = "DELICIOUSTHINGS_DESCRIPTION";
+    }
 
-            name = "DeliciousThings";
-            nameToken = "DELICIOUSTHINGS_NAME";
-            descriptionToken = "DELICIOUSTHINGS_DESCRIPTION";
-        }
+    public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
+    {
+        var texFreeItemFridayExpansionIcon = assets.LoadAssetAsync<Sprite>("texFreeItemFridayExpansionIcon");
+        var texUnlockIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Common/MiscIcons/texUnlockIcon.png");
 
-        public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
-        {
-            var texFreeItemFridayExpansionIcon = assets.LoadAssetAsync<Sprite>("texFreeItemFridayExpansionIcon");
-            var texUnlockIcon = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Common/MiscIcons/texUnlockIcon.png");
-
-            yield return texFreeItemFridayExpansionIcon;
-            iconSprite = texFreeItemFridayExpansionIcon.asset as Sprite;
-            yield return texUnlockIcon;
-            disabledIconSprite = texUnlockIcon.Result;
-        }
+        yield return texFreeItemFridayExpansionIcon;
+        iconSprite = texFreeItemFridayExpansionIcon.asset as Sprite;
+        yield return texUnlockIcon;
+        disabledIconSprite = texUnlockIcon.Result;
     }
 }
