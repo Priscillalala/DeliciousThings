@@ -8,18 +8,22 @@ partial class DeliciousContent
     {
         public static CompleteMultiplayerUnknownEnding Instance { get; private set; }
 
+        public UnlockableDef unlockableDef = GodlessEye.Instance?.unlockableDef;
+
         public CompleteMultiplayerUnknownEnding() : base()
         {
-            Instance = this;
+            if (unlockableDef)
+            {
+                Instance = this;
 
-            // Match achievement identifiers from FreeItemFriday
-            identifier = "CompleteMultiplayerUnknownEnding";
-            this.AutoPopulateTokens();
-            UnlockableDef unlockable = GodlessEye.Instance.unlockableDef;
-            unlockableRewardIdentifier = unlockable.cachedName;
-            unlockable.PopulateUnlockStrings(this);
-            type = typeof(Achievement);
-            serverTrackerType = typeof(ServerAchievement);
+                // Match achievement identifiers from FreeItemFriday
+                identifier = "CompleteMultiplayerUnknownEnding";
+                this.AutoPopulateTokens();
+                unlockableDef.PopulateUnlockStrings(this);
+                unlockableRewardIdentifier = unlockableDef.cachedName;
+                type = typeof(Achievement);
+                serverTrackerType = typeof(ServerAchievement);
+            }
         }
 
         public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)

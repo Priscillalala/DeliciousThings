@@ -8,7 +8,7 @@ partial class DeliciousContent
     {
         public static GodlessEye Instance { get; private set; }
 
-        const string SECTION = "Theremin";
+        const string SECTION = "Godless Eye";
         public readonly bool enabled = EquipmentConfig.Bind(SECTION, string.Format(CONTENT_ENABLED_FORMAT, SECTION), true).Value;
         public readonly float range = EquipmentConfig.Bind(SECTION, "Range", 200f).Value;
         public readonly float duration = EquipmentConfig.Bind(SECTION, "Duration", 2f).Value;

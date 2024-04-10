@@ -1,4 +1,6 @@
-﻿namespace DeliciousThings;
+﻿using RoR2.Skills;
+
+namespace DeliciousThings;
 
 public static class Extensions
 {
@@ -15,5 +17,12 @@ public static class Extensions
             () => Language.GetStringFormatted("UNLOCK_VIA_ACHIEVEMENT_FORMAT", Language.GetString(achievementDef.nameToken), Language.GetString(achievementDef.descriptionToken));
         @this.getUnlockedString = 
             () => Language.GetStringFormatted("UNLOCKED_FORMAT", Language.GetString(achievementDef.nameToken), Language.GetString(achievementDef.descriptionToken));
+    }
+
+    public static void AutoPopulateTokens(this SkillDef @this)
+    {
+        string token = @this.skillName.ToUpperInvariant();
+        @this.skillNameToken = $"SKILL_{token}_NAME";
+        @this.skillDescriptionToken = $"SKILL_{token}_DESC";
     }
 }

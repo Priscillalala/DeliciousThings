@@ -22,6 +22,7 @@ using HG.Coroutines;
 using ShaderSwapper;
 using RoR2BepInExPack.VanillaFixes;
 using System.Reflection;
+using RoR2.Skills;
 
 
 [module: UnverifiableCode]
@@ -114,6 +115,13 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
         }
         else EquipmentActivationFunctions = null;
 
+        SkillDef[] skills = exportedTypes
+            .Where(x => x.IsSubclassOf(typeof(SkillDef)) && !x.IsAbstract)
+            .Select(ScriptableObject.CreateInstance)
+            .OfType<SkillDef>()
+            .ToArray();
+        contentPack.skillDefs.Add(skills);
+
         UnlockableDef[] unlockables = exportedTypes
             .Where(x => x.IsSubclassOf(typeof(UnlockableDef)) && !x.IsAbstract)
             .Select(ScriptableObject.CreateInstance)
@@ -125,22 +133,11 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
         
         ContentManager.collectContentPackProviders += add => add(this);
 
-        /*SaferAchievementManager.OnRegisterAchievementAttributeFound += (type, attribute) =>
-        {
-            if (attribute != null && type.Namespace == "DeliciousThings.Achievements" && attribute.unlockableRewardIdentifier != null && UnlockableCatalog.GetUnlockableDef(attribute.unlockableRewardIdentifier) == null)
-            {
-                Logger.LogInfo(attribute.unlockableRewardIdentifier);
-                return attribute;
-            }
-            return attribute;
-        };*/
-
-        HashSet<string> unlockableRewardIdentifiers = new HashSet<string>(unlockables.Select(x => x.cachedName));
         achievements = exportedTypes
             .Where(x => x.IsSubclassOf(typeof(AchievementDef)) && !x.IsAbstract)
             .Select(Activator.CreateInstance)
             .Cast<AchievementDef>()
-            .Where(x => unlockableRewardIdentifiers.Contains(x.unlockableRewardIdentifier))
+            .Where(x => x.unlockableRewardIdentifier != null)
             .ToArray();
         SaferAchievementManager.OnCollectAchievementDefs += (identifiers, identifierToAchievementDef, achievementDefs) =>
         {
@@ -160,7 +157,7 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
         while (!assetBundleCreateRequest.isDone) yield return null;
         AssetBundle assets = assetBundleCreateRequest.assetBundle;
 
-        IEnumerable<object> content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.unlockableDefs, .. achievements];
+        IEnumerable<object> content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements];
 
         ParallelProgressCoroutine parallelProgressCoroutine = new ParallelProgressCoroutine(new ReadableProgress<float>(args.ReportProgress));
         foreach (IStaticContent staticContent in content.OfType<IStaticContent>())

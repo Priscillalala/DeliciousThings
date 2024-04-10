@@ -1,4 +1,6 @@
-﻿namespace DeliciousThings;
+﻿using IL.RoR2.Skills;
+
+namespace DeliciousThings;
 
 partial class DeliciousContent
 {
@@ -53,6 +55,18 @@ partial class DeliciousContent
     }
     #endregion
 
+    #region skills
+    partial class Disembowel : English
+    {
+        Dictionary<string, string> English.Language => new()
+        {
+            [skillNameToken] = $"Disembowel",
+            [skillDescriptionToken] = $"<style=cIsHealing>Poisonous</style>. <style=cIsDamage>Slayer</style>. Lacerate an enemy for <style=cIsDamage>3x{damageCoefficient:0%} damage</style>, causing <style=cIsDamage>bleeding</style> and <style=cIsHealth>hemorrhaging</style>.",
+            ["FSS_KEYWORD_BLEED"] = $"<style=cKeywordName>Bleed</style><style=cSub>Deal <style=cIsDamage>320%</style> base damage over 4s. <i>Bleed can stack.</i></style>",
+        };
+    }
+    #endregion
+
     #region achievements
     partial class BurnMultipleEnemies : English
     {
@@ -69,6 +83,15 @@ partial class DeliciousContent
         {
             [nameToken] = $"Fly Away Together",
             [descriptionToken] = $"In multiplayer, obliterate at the Obelisk with a fellow survivor..",
+        };
+    }
+
+    partial class CrocoBeatArenaFast : English
+    {
+        Dictionary<string, string> English.Language => new()
+        {
+            [nameToken] = $"Acrid: Virulence",
+            [descriptionToken] = $"As Acrid, clear the Void Fields on Monsoon before monsters reach Lv. 10.",
         };
     }
     #endregion

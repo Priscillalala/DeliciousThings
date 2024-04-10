@@ -8,18 +8,22 @@ partial class DeliciousContent
     {
         public static BurnMultipleEnemies Instance { get; private set; }
 
+        public UnlockableDef unlockableDef = FlintArrowhead.Instance?.unlockableDef;
+
         public BurnMultipleEnemies() : base()
         {
-            Instance = this;
+            if (unlockableDef)
+            {
+                Instance = this;
 
-            // Match achievement identifiers from FreeItemFriday
-            identifier = "BurnMultipleEnemies";
-            this.AutoPopulateTokens();
-            UnlockableDef unlockable = FlintArrowhead.Instance.unlockableDef;
-            unlockableRewardIdentifier = unlockable.cachedName;
-            unlockable.PopulateUnlockStrings(this);
-            type = typeof(Achievement);
-            serverTrackerType = typeof(ServerAchievement);
+                // Match achievement identifiers from FreeItemFriday
+                identifier = "BurnMultipleEnemies";
+                this.AutoPopulateTokens();
+                unlockableDef.PopulateUnlockStrings(this);
+                unlockableRewardIdentifier = unlockableDef.cachedName;
+                type = typeof(Achievement);
+                serverTrackerType = typeof(ServerAchievement);
+            }
         }
 
         public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
