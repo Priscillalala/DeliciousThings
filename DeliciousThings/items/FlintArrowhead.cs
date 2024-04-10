@@ -33,7 +33,6 @@ partial class DeliciousContent
                 tags = [ItemTag.Damage];
                 strongerBurn = ColorsAPI.RegisterDamageColor(new Color32(244, 113, 80, 255));
 
-                //On.RoR2.DotController.InitDotCatalog += DotController_InitDotCatalog;
                 Events.GlobalEventManager.onHitEnemyAcceptedServer += GlobalEventManager_onHitEnemyAcceptedServer;
             }
             else DestroyImmediate(this);
@@ -48,12 +47,6 @@ partial class DeliciousContent
                 Logger.LogMessage("set index");
                 DotController.dotDefs[(int)DotController.DotIndex.StrongerBurn].damageColorIndex = Instance.strongerBurn;
             }
-        }
-
-        private void DotController_InitDotCatalog(On.RoR2.DotController.orig_InitDotCatalog orig)
-        {
-            orig();
-            DotController.dotDefs[(int)DotController.DotIndex.StrongerBurn].damageColorIndex = strongerBurn;
         }
 
         private void GlobalEventManager_onHitEnemyAcceptedServer(DamageInfo damageInfo, GameObject victim, uint? dotMaxStacksFromAttacker)
@@ -168,13 +161,11 @@ partial class DeliciousContent
         {
             public new void Awake()
             {
-                Logger.LogInfo("Unlockable awake!!!");
                 if (Instance)
                 {
                     Instance.unlockableDef = this;
 
                     cachedName = string.Format(UNLOCKABLE_ITEM_FORMAT, Instance.name);
-                    Logger.LogWarning(cachedName);
                     nameToken = Instance.nameToken;
 
                     base.Awake();
