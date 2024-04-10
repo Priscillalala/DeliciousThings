@@ -13,7 +13,7 @@ partial class DeliciousContent
         const string SECTION = "Flint Arrowhead";
         public readonly bool enabled = ItemsConfig.Bind(SECTION, string.Format(CONTENT_ENABLED_FORMAT, SECTION), true).Value;
         public readonly float damage = ItemsConfig.Bind(SECTION, "Flat Damage", 3f).Value;
-        public readonly float damagePerStack = ItemsConfig.Bind(SECTION, "Flat Damage", 3f).Value;
+        public readonly float damagePerStack = ItemsConfig.Bind(SECTION, "Flat Damage Per Stack", 3f).Value;
 
         public DamageColorIndex strongerBurn;
         public GameObject impactArrowhead;
@@ -41,10 +41,8 @@ partial class DeliciousContent
         [SystemInitializer(typeof(DotController))]
         private static void InitAfterDotCatalog()
         {
-            Logger.LogMessage("after dot catalog");
             if (Instance) 
             {
-                Logger.LogMessage("set index");
                 DotController.dotDefs[(int)DotController.DotIndex.StrongerBurn].damageColorIndex = Instance.strongerBurn;
             }
         }
@@ -157,7 +155,7 @@ partial class DeliciousContent
             impactArrowheadStronger.transform.GetChild(0).GetComponent<Renderer>().sharedMaterial = matOmniHitspark3Gasoline.Result;
         }
 
-        public class Unlockable : UnlockableDef, IStaticContent
+        public class Unlockable : UnlockableDef//, IStaticContent
         {
             public new void Awake()
             {
@@ -173,13 +171,13 @@ partial class DeliciousContent
                 else DestroyImmediate(this);
             }
 
-            public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
+            /*public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
             {
                 var texBurnMultipleEnemiesIcon = assets.LoadAssetAsync<Sprite>("texBurnMultipleEnemiesIcon");
 
                 yield return texBurnMultipleEnemiesIcon;
                 achievementIcon = (Sprite)texBurnMultipleEnemiesIcon.asset;
-            }
+            }*/
         }
     }
 }

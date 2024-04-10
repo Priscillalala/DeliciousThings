@@ -38,6 +38,21 @@ partial class DeliciousContent
     }
     #endregion
 
+    #region equipment
+    partial class GodlessEye : English
+    {
+        Dictionary<string, string> English.Language => new()
+        {
+            [nameToken] = $"Godless Eye",
+            [pickupToken] = $"Obliterate all nearby enemies from existence, then yourself. Consumed on use.",
+            [descriptionToken] = $"Obliterate enemies within <style=cIsUtility>{range}m</style> from existence. Then, <style=cIsHealth>obliterate yourself from existence</style>. Equipment is <style=cIsUtility>consumed</style> on use.",
+            [consumedDef.nameToken] = $"Godless Eye (Consumed)",
+            [consumedDef.pickupToken] = $"Still shocking to the touch. Does nothing.",
+            [consumedDef.descriptionToken] = $"Still shocking to the touch. Does nothing.",
+        };
+    }
+    #endregion
+
     #region achievements
     partial class BurnMultipleEnemies : English
     {
@@ -45,6 +60,15 @@ partial class DeliciousContent
         {
             [nameToken] = $"Burn To Kill",
             [descriptionToken] = $"Ignite 10 enemies simultaneously.",
+        };
+    }
+
+    partial class CompleteMultiplayerUnknownEnding : English
+    {
+        Dictionary<string, string> English.Language => new()
+        {
+            [nameToken] = $"Fly Away Together",
+            [descriptionToken] = $"In multiplayer, obliterate at the Obelisk with a fellow survivor..",
         };
     }
     #endregion

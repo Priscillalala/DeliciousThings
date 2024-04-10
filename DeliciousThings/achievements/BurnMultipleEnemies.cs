@@ -12,6 +12,7 @@ partial class DeliciousContent
         {
             Instance = this;
 
+            // Match achievement identifiers from FreeItemFriday
             identifier = "BurnMultipleEnemies";
             this.AutoPopulateTokens();
             UnlockableDef unlockable = FlintArrowhead.Instance.unlockableDef;

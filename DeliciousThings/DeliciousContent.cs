@@ -50,6 +50,7 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
     public static ConfigFile ItemsConfig { get; private set; }
     public static ConfigFile SkillsConfig { get; private set; }
     protected static AsyncOperationHandle<IDictionary<string, ItemDisplayRuleSet>> IDRS { get; private set; }
+    protected static Dictionary<EquipmentDef, Func<EquipmentSlot, bool>> EquipmentActivationFunctions { get; private set; } = [];
 
     public string identifier => GUID;
 
@@ -88,6 +89,30 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
             item.requiredExpansion = Expansion.Instance;
         }
         contentPack.itemDefs.Add(items);
+
+        EquipmentDef[] equipments = exportedTypes
+            .Where(x => x.IsSubclassOf(typeof(EquipmentDef)) && !x.IsAbstract)
+            .Select(ScriptableObject.CreateInstance)
+            .OfType<EquipmentDef>()
+            .ToArray();
+        foreach (EquipmentDef equipment in equipments)
+        {
+            equipment.requiredExpansion = Expansion.Instance;
+        }
+        contentPack.equipmentDefs.Add(equipments);
+
+        if (EquipmentActivationFunctions.Count > 0)
+        {
+            On.RoR2.EquipmentSlot.PerformEquipmentAction += (orig, self, equipmentDef) =>
+            {
+                if (EquipmentActivationFunctions.TryGetValue(equipmentDef, out Func<EquipmentSlot, bool> activationFunction))
+                {
+                    return activationFunction != null && activationFunction(self);
+                }
+                return orig(self, equipmentDef);
+            };
+        }
+        else EquipmentActivationFunctions = null;
 
         UnlockableDef[] unlockables = exportedTypes
             .Where(x => x.IsSubclassOf(typeof(UnlockableDef)) && !x.IsAbstract)
@@ -135,7 +160,7 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
         while (!assetBundleCreateRequest.isDone) yield return null;
         AssetBundle assets = assetBundleCreateRequest.assetBundle;
 
-        IEnumerable<object> content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.unlockableDefs, .. achievements];
+        IEnumerable<object> content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.unlockableDefs, .. achievements];
 
         ParallelProgressCoroutine parallelProgressCoroutine = new ParallelProgressCoroutine(new ReadableProgress<float>(args.ReportProgress));
         foreach (IStaticContent staticContent in content.OfType<IStaticContent>())
@@ -162,6 +187,7 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
         while (parallelProgressCoroutine.MoveNext()) yield return parallelProgressCoroutine.Current;
 
         contentPack.effectDefs.Add(content.OfType<IEffectPrefabProvider>().SelectMany(x => x.EffectPrefabs).Select(x => new EffectDef(x)).ToArray());
+        contentPack.networkedObjectPrefabs.Add(content.OfType<INetworkedObjectPrefabProvider>().SelectMany(x => x.NetworkedObjectPrefabs).ToArray());
 
         Dictionary<string, IEnumerable<KeyValuePair<string, string>>> language = new()
         {
@@ -199,5 +225,10 @@ public partial class DeliciousContent : BaseUnityPlugin, IContentPackProvider
     public interface IEffectPrefabProvider
     {
         public IEnumerable<GameObject> EffectPrefabs { get; }
+    }
+
+    public interface INetworkedObjectPrefabProvider
+    {
+        public IEnumerable<GameObject> NetworkedObjectPrefabs { get; }
     }
 }
