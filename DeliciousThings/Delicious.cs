@@ -153,7 +153,7 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
     public IEnumerator LoadStaticContentAsync(LoadStaticContentAsyncArgs args)
     {
         IDRS = IvyLibrary.Ivyl.ToAssetDictionary<ItemDisplayRuleSet>(Addressables.LoadResourceLocationsAsync((IEnumerable<object>)["ContentPack:RoR2.BaseContent", "ContentPack:RoR2.DLC1"], Addressables.MergeMode.Union, typeof(ItemDisplayRuleSet)));
-        
+
         while (!assetBundleCreateRequest.isDone) yield return null;
         AssetBundle assets = assetBundleCreateRequest.assetBundle;
 
@@ -164,7 +164,7 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
         {
             static IEnumerator SafeCoroutineWrapper(IEnumerator coroutine)
             {
-                while (coroutine.MoveNext()) 
+                while (coroutine.MoveNext())
                 {
                     object current = coroutine.Current;
                     if (current is IEnumerator inner)
@@ -186,17 +186,18 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
         contentPack.effectDefs.Add(content.OfType<IEffectPrefabProvider>().SelectMany(x => x.EffectPrefabs).Select(x => new EffectDef(x)).ToArray());
         contentPack.networkedObjectPrefabs.Add(content.OfType<INetworkedObjectPrefabProvider>().SelectMany(x => x.NetworkedObjectPrefabs).ToArray());
 
-        Dictionary<string, IEnumerable<KeyValuePair<string, string>>> language = new()
-        {
-            { "en", content.OfType<English>().SelectMany(x => x.Language) }
-        };
         On.RoR2.Language.LoadStrings += (orig, self) =>
         {
-            orig(self);
-            if (language.TryGetValue(self.name, out var tokenPairs))
+            if (!self.stringsLoaded)
             {
-                self.SetStringsByTokens(tokenPairs);
+                switch (self.name)
+                {
+                    case "en":
+                        self.SetStringsByTokens(content.OfType<English>().SelectMany(x => x.Language));
+                        break;
+                }
             }
+            orig(self);
         };
     }
 
