@@ -58,6 +58,7 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
     public AssetBundleCreateRequest assetBundleCreateRequest;
     public ContentPack contentPack;
     public AchievementDef[] achievements;
+    public object[] content;
 
     public void Awake()
     {
@@ -148,6 +149,22 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
                 achievementDefs.Add(achievement);
             }
         };
+
+        content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements];
+
+        On.RoR2.Language.LoadStrings += (orig, self) =>
+        {
+            if (!self.stringsLoaded)
+            {
+                switch (self.name)
+                {
+                    case "en":
+                        self.SetStringsByTokens(content.OfType<English>().SelectMany(x => x.Language));
+                        break;
+                }
+            }
+            orig(self);
+        };
     }
 
     public IEnumerator LoadStaticContentAsync(LoadStaticContentAsyncArgs args)
@@ -156,8 +173,6 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
 
         while (!assetBundleCreateRequest.isDone) yield return null;
         AssetBundle assets = assetBundleCreateRequest.assetBundle;
-
-        IEnumerable<object> content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements];
 
         ParallelProgressCoroutine parallelProgressCoroutine = new ParallelProgressCoroutine(new ReadableProgress<float>(args.ReportProgress));
         foreach (IStaticContent staticContent in content.OfType<IStaticContent>())
@@ -185,20 +200,6 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
 
         contentPack.effectDefs.Add(content.OfType<IEffectPrefabProvider>().SelectMany(x => x.EffectPrefabs).Select(x => new EffectDef(x)).ToArray());
         contentPack.networkedObjectPrefabs.Add(content.OfType<INetworkedObjectPrefabProvider>().SelectMany(x => x.NetworkedObjectPrefabs).ToArray());
-
-        On.RoR2.Language.LoadStrings += (orig, self) =>
-        {
-            if (!self.stringsLoaded)
-            {
-                switch (self.name)
-                {
-                    case "en":
-                        self.SetStringsByTokens(content.OfType<English>().SelectMany(x => x.Language));
-                        break;
-                }
-            }
-            orig(self);
-        };
     }
 
     public IEnumerator GenerateContentPackAsync(GetContentPackAsyncArgs args)
