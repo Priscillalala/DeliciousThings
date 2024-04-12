@@ -11,6 +11,7 @@ global using MonoMod.Cil;
 global using Mono.Cecil.Cil;
 global using R2API;
 global using RoR2;
+global using Object = UnityEngine.Object;
 
 using System.Security.Permissions;
 using System.Security;
@@ -23,6 +24,7 @@ using ShaderSwapper;
 using RoR2BepInExPack.VanillaFixes;
 using System.Reflection;
 using RoR2.Skills;
+using DeliciousThings.Permutations;
 
 
 [module: UnverifiableCode]
@@ -50,6 +52,7 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
     public static ConfigFile EquipmentConfig { get; private set; }
     public static ConfigFile ItemsConfig { get; private set; }
     public static ConfigFile SkillsConfig { get; private set; }
+    public static ConfigFile PermutationsConfig { get; private set; }
     public static AsyncOperationHandle<IDictionary<string, ItemDisplayRuleSet>> IDRS { get; private set; }
     public static Dictionary<EquipmentDef, Func<EquipmentSlot, bool>> EquipmentActivationFunctions { get; private set; } = [];
 
@@ -57,7 +60,6 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
 
     public AssetBundleCreateRequest assetBundleCreateRequest;
     public ContentPack contentPack;
-    public AchievementDef[] achievements;
     public object[] content;
 
     public void Awake()
@@ -69,6 +71,7 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
         EquipmentConfig = IvyLibrary.Ivyl.CreateConfigFile(this, System.IO.Path.ChangeExtension(Config.ConfigFilePath, ".Equipment.cfg"), false);
         ItemsConfig = IvyLibrary.Ivyl.CreateConfigFile(this, System.IO.Path.ChangeExtension(Config.ConfigFilePath, ".Items.cfg"), false);
         SkillsConfig = IvyLibrary.Ivyl.CreateConfigFile(this, System.IO.Path.ChangeExtension(Config.ConfigFilePath, ".Skills.cfg"), false);
+        PermutationsConfig = IvyLibrary.Ivyl.CreateConfigFile(this, System.IO.Path.ChangeExtension(Config.ConfigFilePath, ".StagePermutations.cfg"), false);
 
         assetBundleCreateRequest = AssetBundle.LoadFromFileAsync(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Info.Location), "freeitemfridayassets"));
 
@@ -134,7 +137,7 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
         
         ContentManager.collectContentPackProviders += add => add(this);
 
-        achievements = exportedTypes
+        AchievementDef[] achievements = exportedTypes
             .Where(x => x.IsSubclassOf(typeof(AchievementDef)) && !x.IsAbstract)
             .Select(Activator.CreateInstance)
             .Cast<AchievementDef>()
@@ -150,7 +153,15 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
             }
         };
 
-        content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements];
+        PermutationDef[] permutations = exportedTypes
+            .Where(x => x.IsSubclassOf(typeof(PermutationDef)) && !x.IsAbstract)
+            .Select(Activator.CreateInstance)
+            .Cast<PermutationDef>()
+            .Where(x => x.enabled)
+            .ToArray();
+        PermutationManager.SetPermutationDefs(permutations);
+
+        content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements, .. permutations];
 
         On.RoR2.Language.LoadStrings += (orig, self) =>
         {

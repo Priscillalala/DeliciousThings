@@ -108,6 +108,7 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
         AddDisplayRules(new ItemDisplaySpec(this, displayModelPrefab));
         AddDisplayRules(new ItemDisplaySpec(consumedDef, consumedDisplayModelPrefab));
 
+        yield return MSObelisk;
         delayedDeathHandler = Ivyl.ClonePrefab(MSObelisk.Result.transform.Find("Stage1FX").gameObject, "DelayedDeathHandler");
         delayedDeathHandler.SetActive(true);
         delayedDeathHandler.AddComponent<NetworkIdentity>();
