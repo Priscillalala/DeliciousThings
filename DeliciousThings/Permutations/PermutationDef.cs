@@ -1,5 +1,4 @@
 ﻿using RoR2.Navigation;
-using System.Security.Cryptography;
 using UnityEngine.SceneManagement;
 
 namespace DeliciousThings.Permutations;

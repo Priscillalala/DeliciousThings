@@ -2,7 +2,6 @@
 using IvyLibrary;
 using RoR2.Navigation;
 using System.Linq;
-using System.Security.Cryptography;
 using UnityEngine.SceneManagement;
 
 namespace DeliciousThings.Permutations;
@@ -100,7 +99,6 @@ public class FramePlatform : PermutationDef, Delicious.IStaticContent
                         if (b.Contains(foliage.position))
                         {
                             setSceneObjectsActive.objectsToDeactivate.Add(foliage.gameObject);
-                            Delicious.Logger.LogMessage(foliage.name);
                             break;
                         }
                     }

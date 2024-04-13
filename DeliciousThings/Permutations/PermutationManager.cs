@@ -14,11 +14,6 @@ public static class PermutationManager
 
         SceneManager.activeSceneChanged += ActiveSceneChanged;
 
-        /*SceneManager.activeSceneChanged += (oldScene, newScene) =>
-        {
-            
-        };*/
-
         On.RoR2.Navigation.NodeGraph.GenerateLinkDebugMesh += NodeGraph_GenerateLinkDebugMesh;
     }
 
