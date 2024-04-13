@@ -124,6 +124,7 @@ public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicio
         idrs["idrsVoidSurvivor"].AddDisplayRule(itemDisplay, "ShoulderL", new Vector3(0.063F, 0.289F, 0.052F), new Vector3(13.815F, 321.452F, 169.227F), new Vector3(0.597F, 0.597F, 0.597F));
         idrs["idrsScav"].AddDisplayRule(itemDisplay, "Weapon", new Vector3(3.037F, 8.08F, 2.629F), new Vector3(45.304F, 318.616F, 106.156F), new Vector3(5.5F, 5.5F, 5.5F));
 
+        yield return OmniExplosionVFXQuick;
         impactArrowhead = Ivyl.ClonePrefab(OmniExplosionVFXQuick.Result, "ImpactArrowhead");
         if (impactArrowhead.TryGetComponent(out EffectComponent effectComponent))
         {
@@ -151,6 +152,7 @@ public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicio
         }
 
         impactArrowheadStronger = Ivyl.ClonePrefab(impactArrowhead, "ImpactArrowHeadStronger");
+        yield return matOmniHitspark3Gasoline;
         impactArrowheadStronger.transform.GetChild(0).GetComponent<Renderer>().sharedMaterial = matOmniHitspark3Gasoline.Result;
     }
 

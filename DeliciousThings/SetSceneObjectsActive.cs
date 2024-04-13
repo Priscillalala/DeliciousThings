@@ -7,7 +7,7 @@ public class SetSceneObjectsActive : MonoBehaviour
 
     public void OnEnable()
     {
-        foreach (GameObject toActivate in  objectsToActivate) 
+        foreach (GameObject toActivate in objectsToActivate) 
         {
             toActivate?.SetActive(true);
         }

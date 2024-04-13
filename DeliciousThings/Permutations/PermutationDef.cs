@@ -1,4 +1,5 @@
 ﻿using RoR2.Navigation;
+using System.Security.Cryptography;
 using UnityEngine.SceneManagement;
 
 namespace DeliciousThings.Permutations;
@@ -33,6 +34,17 @@ public abstract class PermutationDef
             foreach (NodeGraph.LinkIndex linkIndex in nodeGraph.GetActiveNodeLinks(nodeIndex))
             {
                 nodeGraph.links[linkIndex.linkIndex].gateIndex = gateIndex;
+            }
+        }
+    }
+
+    protected static void EnsureNodesInBounds(NodeGraph nodeGraph, List<NodeGraph.NodeIndex> nodes, Bounds bounds)
+    {
+        for (int i = nodes.Count - 1; i >= 0; i--)
+        {
+            if (!nodeGraph.GetNodePosition(nodes[i], out Vector3 position) || !bounds.Contains(position))
+            {
+                nodes.RemoveAt(i);
             }
         }
     }

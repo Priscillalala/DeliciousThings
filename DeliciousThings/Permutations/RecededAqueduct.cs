@@ -109,11 +109,7 @@ public class RecededAqueduct : PermutationDef, Delicious.IStaticContent
 
         ArrayUtils.ArrayAppend(ref toggleGroupController.toggleGroups, new GameObjectToggleGroup
         {
-            objects =
-            [
-                mdlGlAqueductPartial.gameObject,
-                mdlGlAqueductReceded.gameObject,
-            ],
+            objects = [mdlGlAqueductPartial.gameObject, mdlGlAqueductReceded.gameObject],
             minEnabled = 1,
             maxEnabled = 1,
         });
