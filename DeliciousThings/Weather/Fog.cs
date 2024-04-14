@@ -9,7 +9,7 @@ public class Fog : WeatherDef
     {
         Delicious.Logger.LogInfo("Fog awake!");
         enabled = true;
-        targetSceneNames = ["snowyforest", "frozenwall", "golemplains", "golemplains2", "blackbeach", "blackbeach2", "foggyswamp", "sulfurpools", "shipgraveyard", "rootjungle", "skymeadow"];
+        targetSceneNames = ["golemplains", "golemplains2", "blackbeach", "blackbeach2", "foggyswamp", "sulfurpools", "shipgraveyard", "rootjungle", "skymeadow"];
         weight = 1.0f;
         selectionToken = "DELICIOUSTHINGS_WEATHER_FOG";
         weatherPrefab = Ivyl.CreatePrefab("Weather, Fog");

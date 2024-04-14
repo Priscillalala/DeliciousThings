@@ -10,6 +10,7 @@ public static class WeatherManager
 
     public static void SetWeatherDefs(WeatherDef[] weatherDefs)
     {
+        return;
         weatherSelections = [];
         foreach (WeatherDef weatherDef in weatherDefs)
         {
