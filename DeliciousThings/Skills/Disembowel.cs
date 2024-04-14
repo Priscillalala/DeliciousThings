@@ -63,9 +63,11 @@ public partial class Disembowel : SkillDef, Delicious.IStaticContent
         yield return CrocoBodySpecialFamily;
         CrocoBodySpecialFamily.Result.AddSkill(this, unlockableDef);
 
+        yield return CrocoBiteEffect;
         crocoSuperBiteEffect = Ivyl.ClonePrefab(CrocoBiteEffect.Result, "CrocoSuperBiteEffect");
         if (crocoSuperBiteEffect.transform.TryFind("Goo", out Transform goo) && goo.TryGetComponent(out ParticleSystemRenderer gooRenderer))
         {
+            yield return matCrocoGooSmall2;
             gooRenderer.sharedMaterial = matCrocoGooSmall2.Result;
         }
         const float SCALE_MULTIPLIER = 1.2f;
@@ -76,6 +78,7 @@ public partial class Disembowel : SkillDef, Delicious.IStaticContent
             {
                 swingTrailRenderer.sharedMaterial = new Material(swingTrailRenderer.sharedMaterial);
                 swingTrailRenderer.sharedMaterial.SetColor("_TintColor", new Color32(121, 255, 107, 255));
+                yield return texRampPoison;
                 swingTrailRenderer.sharedMaterial.SetTexture("_RemapTex", texRampPoison.Result);
             }
         }
