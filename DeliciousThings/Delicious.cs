@@ -25,6 +25,7 @@ using RoR2BepInExPack.VanillaFixes;
 using System.Reflection;
 using RoR2.Skills;
 using DeliciousThings.Permutations;
+using DeliciousThings.Weather;
 
 
 [module: UnverifiableCode]
@@ -161,7 +162,15 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
             .ToArray();
         PermutationManager.SetPermutationDefs(permutations);
 
-        content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements, .. permutations];
+        WeatherDef[] weathers = exportedTypes
+            .Where(x => x.IsSubclassOf(typeof(WeatherDef)) && !x.IsAbstract)
+            .Select(Activator.CreateInstance)
+            .Cast<WeatherDef>()
+            .Where(x => x.enabled)
+            .ToArray();
+        WeatherManager.SetWeatherDefs(weathers);
+
+        content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements, .. permutations, .. weathers];
 
         On.RoR2.Language.LoadStrings += (orig, self) =>
         {
