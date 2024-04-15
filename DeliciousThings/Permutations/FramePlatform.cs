@@ -80,12 +80,12 @@ public class FramePlatform : PermutationDef, Delicious.IStaticContent
             [
                 new Bounds
                 {
-                    min = new Vector3(84, -150, -341),
+                    min = new Vector3(84, -160, -341),
                     max = new Vector3(149, -111, -301),
                 },
                 new Bounds
                 {
-                    min = new Vector3(128, -152, -340),
+                    min = new Vector3(128, -160, -340),
                     max = new Vector3(209, -89, -284),
                 },
             ];

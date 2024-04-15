@@ -24,18 +24,19 @@ public class Fog : WeatherDef
         rampFog.fogPower.Override(0.8f);
         rampFog.fogZero.Override(-0.002f);
         rampFog.fogOne.Override(0.02f);
-        rampFog.skyboxStrength.Override(0.05f);
+        rampFog.skyboxStrength.Override(0.02f);
         ColorGrading colorGrading = ppFoggy.AddSettings<ColorGrading>();
-        colorGrading.postExposure.Override(-0.2f);
+        //colorGrading.postExposure.Override(-0.1f);
         //colorGrading.contrast.Override(70f);
         colorGrading.temperature.Override(-10f);
-        colorGrading.colorFilter.Override(new Color32(246, 252, 199, 255));
+        colorGrading.colorFilter.Override(new Color32(95, 99, 74, 255));
         Bloom bloom = ppFoggy.AddSettings<Bloom>();
-        bloom.intensity.Override(1.5f);
+        bloom.intensity.Override(0.6f);
         bloom.threshold.Override(0f);
         PostProcessVolume volume = weatherPrefab.AddComponent<PostProcessVolume>();
         volume.sharedProfile = ppFoggy;
         volume.isGlobal = true;
         volume.priority = 1000;
+        volume.weight = .99f;
     }
 }

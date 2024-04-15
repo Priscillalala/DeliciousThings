@@ -40,7 +40,6 @@ public class RectShipMid : PermutationDef, Delicious.IStaticContent
 
     public override void Apply(Scene scene, IDictionary<string, GameObject> rootObjects, SceneObjectToggleGroup toggleGroupController)
     {
-        GameObject.CreatePrimitive(PrimitiveType.Cube);
         if (!rootObjects.TryGetValue("HOLDER: Environment", out GameObject environmentHolder))
         {
             return;

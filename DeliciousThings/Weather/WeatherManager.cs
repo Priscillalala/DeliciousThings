@@ -18,7 +18,6 @@ public static class WeatherManager
             {
                 foreach (string scene in weatherDef.targetSceneNames)
                 {
-                    Delicious.Logger.LogInfo(scene);
                     if (!weatherSelections.TryGetValue(scene, out var selection))
                     {
                         weatherSelections.Add(scene, selection = new WeightedSelection<WeatherDef>());

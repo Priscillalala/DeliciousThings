@@ -23,7 +23,7 @@ public class FogWarm : WeatherDef
         rampFog.fogPower.Override(0.8f);
         rampFog.fogZero.Override(0.002f);
         rampFog.fogOne.Override(0.02f);
-        rampFog.skyboxStrength.Override(0.05f);
+        rampFog.skyboxStrength.Override(0.02f);
         ColorGrading colorGrading = ppFoggyWarm.AddSettings<ColorGrading>();
         colorGrading.postExposure.Override(-0.1f);
         colorGrading.contrast.Override(100f);
@@ -36,5 +36,6 @@ public class FogWarm : WeatherDef
         volume.sharedProfile = ppFoggyWarm;
         volume.isGlobal = true;
         volume.priority = 1000;
+        volume.weight = .99f;
     }
 }
