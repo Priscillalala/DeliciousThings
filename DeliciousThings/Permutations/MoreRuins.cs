@@ -59,12 +59,12 @@ public class MoreRuins : PermutationDef, Delicious.IStaticContent
         if (gameplaySpace.transform.TryFind("BbRuinStep1_LOD0 (1)", out Transform BbRuinStep1))
         {
             GameObject step1 = Object.Instantiate(BbRuinStep1.gameObject, moreRuins.transform);
-            step1.GetComponent<MeshFilter>().mesh = BbRuinStep1Mesh;
+            step1.GetComponent<MeshFilter>().sharedMesh = BbRuinStep1Mesh;
             step1.transform.localPosition = new Vector3(96f, -155.5f, -64f);
             step1.transform.localEulerAngles = new Vector3(270, 240, 0);
 
             GameObject step2 = Object.Instantiate(BbRuinStep1.gameObject, moreRuins.transform);
-            step2.GetComponent<MeshFilter>().mesh = BbRuinStep1Mesh;
+            step2.GetComponent<MeshFilter>().sharedMesh = BbRuinStep1Mesh;
             step2.transform.localPosition = new Vector3(108f, -151.5f, -63f);
             step2.transform.localEulerAngles = new Vector3(270, 255, 0);
         }
