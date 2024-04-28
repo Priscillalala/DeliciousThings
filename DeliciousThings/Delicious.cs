@@ -26,6 +26,9 @@ using System.Reflection;
 using RoR2.Skills;
 using DeliciousThings.Permutations;
 using DeliciousThings.Weather;
+using Mono.Cecil;
+using DeliciousThings.Items;
+using RoR2.ExpansionManagement;
 
 
 [module: UnverifiableCode]
@@ -55,12 +58,12 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
     public static ConfigFile SkillsConfig { get; private set; }
     public static ConfigFile PermutationsConfig { get; private set; }
     public static AsyncOperationHandle<IDictionary<string, ItemDisplayRuleSet>> IDRS { get; private set; }
-    public static Dictionary<EquipmentDef, Func<EquipmentSlot, bool>> EquipmentActivationFunctions { get; private set; } = [];
 
     public string identifier => GUID;
 
     public AssetBundleCreateRequest assetBundleCreateRequest;
     public ContentPack contentPack;
+    public ExpansionDef expansionDef;
     public object[] content;
 
     public void Awake()
@@ -81,78 +84,55 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
             identifier = identifier,
         };
 
-        contentPack.expansionDefs.Add([ScriptableObject.CreateInstance<Expansion>()]);
+        expansionDef = ScriptableObject.CreateInstance<Expansion>();
+        contentPack.expansionDefs.Add([expansionDef]);
 
         IEnumerable<Type> exportedTypes = typeof(Delicious).Assembly.ExportedTypes;
 
-        ItemDef[] items = exportedTypes
+        contentPack.itemDefs.Add(exportedTypes
             .Where(x => x.IsSubclassOf(typeof(ItemDef)) && !x.IsAbstract)
             .Select(ScriptableObject.CreateInstance)
             .OfType<ItemDef>()
-            .ToArray();
-        foreach (ItemDef item in items)
+            .ToArray());
+        foreach (ItemDef itemDef in contentPack.itemDefs)
         {
-            item.requiredExpansion = Expansion.Instance;
+            itemDef.requiredExpansion = expansionDef;
         }
-        contentPack.itemDefs.Add(items);
 
-        EquipmentDef[] equipments = exportedTypes
+        contentPack.equipmentDefs.Add(exportedTypes
             .Where(x => x.IsSubclassOf(typeof(EquipmentDef)) && !x.IsAbstract)
             .Select(ScriptableObject.CreateInstance)
             .OfType<EquipmentDef>()
-            .ToArray();
-        foreach (EquipmentDef equipment in equipments)
+            .ToArray());
+        foreach (EquipmentDef equipmentDef in contentPack.equipmentDefs)
         {
-            equipment.requiredExpansion = Expansion.Instance;
+            equipmentDef.requiredExpansion = expansionDef;
         }
-        contentPack.equipmentDefs.Add(equipments);
 
-        if (EquipmentActivationFunctions.Count > 0)
-        {
-            On.RoR2.EquipmentSlot.PerformEquipmentAction += (orig, self, equipmentDef) =>
-            {
-                if (EquipmentActivationFunctions.TryGetValue(equipmentDef, out Func<EquipmentSlot, bool> activationFunction))
-                {
-                    return activationFunction != null && activationFunction(self);
-                }
-                return orig(self, equipmentDef);
-            };
-        }
-        else EquipmentActivationFunctions = null;
-
-        SkillDef[] skills = exportedTypes
+        contentPack.skillDefs.Add(exportedTypes
             .Where(x => x.IsSubclassOf(typeof(SkillDef)) && !x.IsAbstract)
             .Select(ScriptableObject.CreateInstance)
             .OfType<SkillDef>()
-            .ToArray();
-        contentPack.skillDefs.Add(skills);
+            .ToArray());
 
-        UnlockableDef[] unlockables = exportedTypes
+        contentPack.unlockableDefs.Add(exportedTypes
             .Where(x => x.IsSubclassOf(typeof(UnlockableDef)) && !x.IsAbstract)
             .Select(ScriptableObject.CreateInstance)
             .OfType<UnlockableDef>()
-            .ToArray();
-        contentPack.unlockableDefs.Add(unlockables);
+            .ToArray());
 
-        contentPack.entityStateTypes.Add(exportedTypes.Where(x => x.IsSubclassOf(typeof(EntityStates.EntityState)) && !x.IsAbstract).ToArray());
+        contentPack.entityStateTypes.Add(exportedTypes
+            .Where(x => x.IsSubclassOf(typeof(EntityStates.EntityState)) && !x.IsAbstract)
+            .ToArray());
         
         ContentManager.collectContentPackProviders += add => add(this);
 
-        AchievementDef[] achievements = exportedTypes
+        /*AchievementDef[] achievements = exportedTypes
             .Where(x => x.IsSubclassOf(typeof(AchievementDef)) && !x.IsAbstract)
             .Select(Activator.CreateInstance)
             .Cast<AchievementDef>()
             .Where(x => x.unlockableRewardIdentifier != null)
-            .ToArray();
-        SaferAchievementManager.OnCollectAchievementDefs += (identifiers, identifierToAchievementDef, achievementDefs) =>
-        {
-            foreach (AchievementDef achievement in achievements)
-            {
-                identifiers.Add(achievement.identifier);
-                identifierToAchievementDef.Add(achievement.identifier, achievement);
-                achievementDefs.Add(achievement);
-            }
-        };
+            .ToArray();*/
 
         PermutationDef[] permutations = exportedTypes
             .Where(x => x.IsSubclassOf(typeof(PermutationDef)) && !x.IsAbstract)
@@ -170,7 +150,25 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
             .ToArray();
         WeatherManager.SetWeatherDefs(weathers);
 
-        content = [Expansion.Instance, .. contentPack.itemDefs, .. contentPack.equipmentDefs, .. contentPack.skillDefs, .. contentPack.unlockableDefs, .. achievements, .. permutations, .. weathers];
+        content = [
+            expansionDef, 
+            .. contentPack.itemDefs, 
+            .. contentPack.equipmentDefs, 
+            .. contentPack.skillDefs, 
+            .. contentPack.unlockableDefs, 
+            .. permutations, 
+            .. weathers
+            ];
+
+        /*SaferAchievementManager.OnCollectAchievementDefs += (identifiers, identifierToAchievementDef, achievementDefs) =>
+        {
+            foreach (AchievementDef achievement in content.OfType<IAchievementDefProvider>().Select(x => x.AchievementDef))
+            {
+                identifiers.Add(achievement.identifier);
+                identifierToAchievementDef.Add(achievement.identifier, achievement);
+                achievementDefs.Add(achievement);
+            }
+        };*/
 
         On.RoR2.Language.LoadStrings += (orig, self) =>
         {
@@ -179,7 +177,7 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
                 switch (self.name)
                 {
                     case "en":
-                        self.SetStringsByTokens(content.OfType<English>().SelectMany(x => x.Language));
+                        self.SetStringsByTokens(content.OfType<English>().SelectMany(x => x.TokenPairs));
                         break;
                 }
             }
@@ -218,6 +216,8 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
         }
         while (parallelProgressCoroutine.MoveNext()) yield return parallelProgressCoroutine.Current;
 
+        contentPack.equipmentDefs.Add(content.OfType<IEquipmentDefProvider>().SelectMany(x => x.EquipmentDefs).ToArray());
+        contentPack.unlockableDefs.Add(content.OfType<IUnlockableDefProvider>().Select(x => x.UnlockableDef).ToArray());
         contentPack.effectDefs.Add(content.OfType<IEffectPrefabProvider>().SelectMany(x => x.EffectPrefabs).Select(x => new EffectDef(x)).ToArray());
         contentPack.networkedObjectPrefabs.Add(content.OfType<INetworkedObjectPrefabProvider>().SelectMany(x => x.NetworkedObjectPrefabs).ToArray());
     }
@@ -239,6 +239,16 @@ public partial class Delicious : BaseUnityPlugin, IContentPackProvider
     public interface IStaticContent
     {
         public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets);
+    }
+
+    public interface IEquipmentDefProvider
+    {
+        public IEnumerable<EquipmentDef> EquipmentDefs { get; }
+    }
+
+    public interface IUnlockableDefProvider
+    {
+        public UnlockableDef UnlockableDef { get; }
     }
 
     public interface IEffectPrefabProvider

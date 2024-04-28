@@ -3,48 +3,18 @@ using DeliciousThings.Equipment;
 
 namespace DeliciousThings.Achievements;
 
-public partial class CompleteMultiplayerUnknownEnding : AchievementDef, Delicious.IStaticContent
+public class CompleteMultiplayerUnknownEndingAchievement : BaseAchievement
 {
-    public static CompleteMultiplayerUnknownEnding Instance { get; private set; }
-    public static UnlockableDef Unlockable => GodlessEye.Instance?.unlockableDef;
-
-    public CompleteMultiplayerUnknownEnding() : base()
+    public override void OnInstall()
     {
-        if (Unlockable)
-        {
-            Instance = this;
-
-            // Match achievement identifiers from FreeItemFriday
-            identifier = "CompleteMultiplayerUnknownEnding";
-            this.AutoPopulateTokens();
-            Unlockable.PopulateUnlockStrings(this);
-            unlockableRewardIdentifier = Unlockable.cachedName;
-            type = typeof(Achievement);
-            serverTrackerType = typeof(ServerAchievement);
-        }
+        base.OnInstall();
+        SetServerTracked(true);
     }
 
-    public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
+    public override void OnUninstall()
     {
-        var texCompleteMultiplayerUnknownEndingIcon = assets.LoadAssetAsync<Sprite>("texCompleteMultiplayerUnknownEndingIcon");
-
-        yield return texCompleteMultiplayerUnknownEndingIcon;
-        SetAchievedIcon((Sprite)texCompleteMultiplayerUnknownEndingIcon.asset);
-    }
-
-    public class Achievement : BaseAchievement
-    {
-        public override void OnInstall()
-        {
-            base.OnInstall();
-            SetServerTracked(true);
-        }
-
-        public override void OnUninstall()
-        {
-            SetServerTracked(false);
-            base.OnUninstall();
-        }
+        SetServerTracked(false);
+        base.OnUninstall();
     }
 
     public class ServerAchievement : BaseServerAchievement

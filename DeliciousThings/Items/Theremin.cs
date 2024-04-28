@@ -5,7 +5,6 @@ namespace DeliciousThings.Items;
 
 public partial class Theremin : ItemDef, Delicious.IStaticContent
 {
-    public static Theremin Instance { get; private set; }
     public static ConfigFile Config => Delicious.ItemsConfig;
 
     const string SECTION = "Theremin";
@@ -17,12 +16,12 @@ public partial class Theremin : ItemDef, Delicious.IStaticContent
     {
         if (enabled)
         {
-            Instance = this;
-
             name = string.Format(Delicious.IDENTIFIER_FORMAT, "Theremin");
             AutoPopulateTokens();
             deprecatedTier = ItemTier.Tier2;
             tags = [ItemTag.Damage, ItemTag.InteractableRelated];
+
+            ThereminBehaviour.ItemDef = this;
 
             On.RoR2.MusicController.UpdateTeleporterParameters += MusicController_UpdateTeleporterParameters;
         }
@@ -79,8 +78,11 @@ public partial class Theremin : ItemDef, Delicious.IStaticContent
 
     public class ThereminBehaviour : BaseItemBodyBehavior
     {
-        [ItemDefAssociation(useOnServer = true, useOnClient = true)]
-        public static ItemDef GetItemDef() => Instance;
+        public static Theremin ItemDef 
+        { 
+            [ItemDefAssociation(useOnServer = true, useOnClient = true)] 
+            get; set; 
+        }
 
         public float currentBonus;
         public float currentBonusCoefficient;
@@ -92,7 +94,7 @@ public partial class Theremin : ItemDef, Delicious.IStaticContent
             {
                 Vector3 distance = body.corePosition - position;
                 currentBonusCoefficient = 1000f / (1000f + distance.sqrMagnitude);
-                currentBonus = currentBonusCoefficient * Ivyl.StackScaling(Instance.attackSpeedBonus, Instance.attackSpeedBonusPerStack, stack);
+                currentBonus = currentBonusCoefficient * Ivyl.StackScaling(ItemDef.attackSpeedBonus, ItemDef.attackSpeedBonusPerStack, stack);
             }
             else
             {

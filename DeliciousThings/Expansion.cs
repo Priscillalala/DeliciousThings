@@ -6,12 +6,8 @@ namespace DeliciousThings;
 
 public partial class Expansion : ExpansionDef, Delicious.IStaticContent
 {
-    public static Expansion Instance { get; private set; }
-
     public void Awake()
     {
-        Instance = this;
-
         name = "DeliciousThings";
         nameToken = "DELICIOUSTHINGS_NAME";
         descriptionToken = "DELICIOUSTHINGS_DESCRIPTION";

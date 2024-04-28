@@ -1,50 +1,19 @@
 ﻿using RoR2.Achievements;
-using DeliciousThings.Items;
 
 namespace DeliciousThings.Achievements;
 
-public partial class BurnMultipleEnemies : AchievementDef, Delicious.IStaticContent
+public class BurnMultipleEnemiesAchievement : BaseAchievement
 {
-    public static BurnMultipleEnemies Instance { get; private set; }
-    public static UnlockableDef Unlockable => FlintArrowhead.Instance?.unlockableDef;
-
-    public BurnMultipleEnemies() : base()
+    public override void OnInstall()
     {
-        if (Unlockable)
-        {
-            Instance = this;
-
-            // Match achievement identifiers from FreeItemFriday
-            identifier = "BurnMultipleEnemies";
-            this.AutoPopulateTokens();
-            Unlockable.PopulateUnlockStrings(this);
-            unlockableRewardIdentifier = Unlockable.cachedName;
-            type = typeof(Achievement);
-            serverTrackerType = typeof(ServerAchievement);
-        }
+        base.OnInstall();
+        SetServerTracked(true);
     }
 
-    public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
+    public override void OnUninstall()
     {
-        var texBurnMultipleEnemiesIcon = assets.LoadAssetAsync<Sprite>("texBurnMultipleEnemiesIcon");
-
-        yield return texBurnMultipleEnemiesIcon;
-        SetAchievedIcon((Sprite)texBurnMultipleEnemiesIcon.asset);
-    }
-
-    public class Achievement : BaseAchievement
-    {
-        public override void OnInstall()
-        {
-            base.OnInstall();
-            SetServerTracked(true);
-        }
-
-        public override void OnUninstall()
-        {
-            SetServerTracked(false);
-            base.OnUninstall();
-        }
+        SetServerTracked(false);
+        base.OnUninstall();
     }
 
     public class ServerAchievement : BaseServerAchievement

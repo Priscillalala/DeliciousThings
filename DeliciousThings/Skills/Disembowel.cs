@@ -6,25 +6,24 @@ using DeliciousThings.Achievements;
 
 namespace DeliciousThings.Skills;
 
-public partial class Disembowel : SkillDef, Delicious.IStaticContent
+public partial class Disembowel : SkillDef, Delicious.IStaticContent, Delicious.IUnlockableDefProvider
 {
-    public static Disembowel Instance { get; private set; }
     public static ConfigFile Config => Delicious.SkillsConfig;
+
+    public UnlockableDef UnlockableDef { get; set; }
 
     const string SECTION = "Disembowel";
     public readonly bool enabled = Config.Bind(SECTION, string.Format(Delicious.CONTENT_ENABLED_FORMAT, SECTION), true).Value;
     public readonly float damageCoefficient = Config.Bind(SECTION, "Damage Coefficient", 2f).Value;
 
+    public AchievementDef crocoBeatArenaFast;
     public DamageAPI.ModdedDamageType superBleedOnHit;
     public GameObject crocoSuperBiteEffect;
-    public UnlockableDef unlockableDef;
 
     public void Awake()
     {
         if (enabled)
         {
-            Instance = this;
-
             skillName = string.Format(Delicious.IDENTIFIER_FORMAT, "CrocoSuperBite");
             ((ScriptableObject)this).name = skillName;
             this.AutoPopulateTokens();
@@ -34,6 +33,24 @@ public partial class Disembowel : SkillDef, Delicious.IStaticContent
             interruptPriority = InterruptPriority.PrioritySkill;
             keywordTokens = ["KEYWORD_POISON", "KEYWORD_SLAYER", "FSS_KEYWORD_BLEED", "KEYWORD_SUPERBLEED"];
             superBleedOnHit = DamageAPI.ReserveDamageType();
+
+            UnlockableDef = CreateInstance<UnlockableDef>();
+            UnlockableDef.cachedName = string.Format(Delicious.UNLOCKABLE_SKILL_FORMAT, skillName);
+            UnlockableDef.nameToken = skillNameToken;
+
+            crocoBeatArenaFast = new AchievementDef
+            {
+                // Match achievement identifiers from 1.6.1
+                identifier = "FSS_CrocoBeatArenaFast",
+                unlockableRewardIdentifier = UnlockableDef.cachedName,
+                prerequisiteAchievementIdentifier = "BeatArena",
+                type = typeof(CrocoBeatArenaFastAchievement),
+                serverTrackerType = typeof(BurnMultipleEnemiesAchievement.ServerAchievement),
+            };
+            crocoBeatArenaFast.AutoPopulateTokens();
+            crocoBeatArenaFast.Register();
+
+            UnlockableDef.PopulateUnlockStrings(crocoBeatArenaFast);
 
             Events.GlobalEventManager.onHitEnemyAcceptedServer += GlobalEventManager_onHitEnemyAcceptedServer;
         }
@@ -59,9 +76,9 @@ public partial class Disembowel : SkillDef, Delicious.IStaticContent
 
         yield return texCrocoSuperBiteIcon;
         icon = (Sprite)texCrocoSuperBiteIcon.asset;
-        CrocoBeatArenaFast.Instance?.SetAchievedIcon(icon);
+        crocoBeatArenaFast.SetAchievedIcon(icon);
         yield return CrocoBodySpecialFamily;
-        CrocoBodySpecialFamily.Result.AddSkill(this, unlockableDef);
+        CrocoBodySpecialFamily.Result.AddSkill(this, UnlockableDef);
 
         yield return CrocoBiteEffect;
         crocoSuperBiteEffect = Ivyl.ClonePrefab(CrocoBiteEffect.Result, "CrocoSuperBiteEffect");
@@ -89,23 +106,6 @@ public partial class Disembowel : SkillDef, Delicious.IStaticContent
         if (crocoSuperBiteEffect.transform.TryFind("Flash", out Transform flash))
         {
             flash.localScale *= SCALE_MULTIPLIER;
-        }
-    }
-
-    public class Unlockable : UnlockableDef
-    {
-        public new void Awake()
-        {
-            if (Instance)
-            {
-                Instance.unlockableDef = this;
-
-                cachedName = string.Format(Delicious.UNLOCKABLE_SKILL_FORMAT, Instance.skillName);
-                nameToken = Instance.skillNameToken;
-
-                base.Awake();
-            }
-            else DestroyImmediate(this);
         }
     }
 }

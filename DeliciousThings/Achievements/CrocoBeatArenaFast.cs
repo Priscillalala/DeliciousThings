@@ -3,43 +3,20 @@ using DeliciousThings.Skills;
 
 namespace DeliciousThings.Achievements;
 
-public partial class CrocoBeatArenaFast : AchievementDef
+public class CrocoBeatArenaFastAchievement : BaseAchievement
 {
-    public static CrocoBeatArenaFast Instance { get; private set; }
-    public static UnlockableDef Unlockable => Disembowel.Instance?.unlockableDef;
+    public override BodyIndex LookUpRequiredBodyIndex() => BodyCatalog.FindBodyIndex("CrocoBody");
 
-    public CrocoBeatArenaFast() : base()
+    public override void OnBodyRequirementMet()
     {
-        if (Unlockable)
-        {
-            Instance = this;
-
-            // Match achievement identifiers from 1.6.1
-            identifier = "FSS_CrocoBeatArenaFast";
-            this.AutoPopulateTokens();
-            Unlockable.PopulateUnlockStrings(this);
-            unlockableRewardIdentifier = Unlockable.cachedName;
-            prerequisiteAchievementIdentifier = "BeatArena";
-            type = typeof(Achievement);
-            serverTrackerType = typeof(ServerAchievement);
-        }
+        base.OnBodyRequirementMet();
+        SetServerTracked(true);
     }
 
-    public class Achievement : BaseAchievement
+    public override void OnBodyRequirementBroken()
     {
-        public override BodyIndex LookUpRequiredBodyIndex() => BodyCatalog.FindBodyIndex("CrocoBody");
-
-        public override void OnBodyRequirementMet()
-        {
-            base.OnBodyRequirementMet();
-            SetServerTracked(true);
-        }
-
-        public override void OnBodyRequirementBroken()
-        {
-            SetServerTracked(false);
-            base.OnBodyRequirementBroken();
-        }
+        SetServerTracked(false);
+        base.OnBodyRequirementBroken();
     }
 
     public class ServerAchievement : BaseServerAchievement

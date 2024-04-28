@@ -1,10 +1,10 @@
-﻿using IvyLibrary;
+﻿using DeliciousThings.Achievements;
+using IvyLibrary;
 
 namespace DeliciousThings.Equipment;
 
-public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delicious.INetworkedObjectPrefabProvider
+public partial class GodlessEye : ScriptableEquipmentDef, Delicious.IStaticContent, Delicious.INetworkedObjectPrefabProvider, Delicious.IEquipmentDefProvider, Delicious.IUnlockableDefProvider
 {
-    public static GodlessEye Instance { get; private set; }
     public static ConfigFile Config => Delicious.EquipmentConfig;
 
     const string SECTION = "Godless Eye";
@@ -13,17 +13,18 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
     public readonly float duration = Config.Bind(SECTION, "Duration", 2f).Value;
     public readonly float maxConsecutiveEnemies = Config.Bind(SECTION, "Maximum Consecutive Enemies", 10).Value;
 
-    public Consumed consumedDef;
+    public EquipmentDef consumedDef;
+    public AchievementDef completeMultiplayerUnknownEnding;
     public GameObject delayedDeathHandler;
 
     public IEnumerable<GameObject> NetworkedObjectPrefabs => [delayedDeathHandler];
+    public IEnumerable<EquipmentDef> EquipmentDefs => [consumedDef];
+    public UnlockableDef UnlockableDef => unlockableDef;
 
     public void Awake()
     {
         if (enabled)
         {
-            Instance = this;
-
             name = string.Format(Delicious.IDENTIFIER_FORMAT, "DeathEye");
             AutoPopulateTokens();
             canDrop = true;
@@ -33,8 +34,34 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
             appearsInSinglePlayer = false;
             canBeRandomlyTriggered = false;
             enigmaCompatible = false;
+            fireFunction = FireDeathEye;
 
-            Delicious.EquipmentActivationFunctions[this] = FireDeathEye;
+            consumedDef = CreateInstance<EquipmentDef>();
+            consumedDef.name = string.Format(Delicious.IDENTIFIER_FORMAT, "DeathEyeConsumed");
+            consumedDef.AutoPopulateTokens();
+            consumedDef.canDrop = false;
+            consumedDef.isLunar = true;
+            consumedDef.colorIndex = ColorCatalog.ColorIndex.Unaffordable;
+            consumedDef.appearsInSinglePlayer = false;
+            consumedDef.canBeRandomlyTriggered = false;
+            consumedDef.enigmaCompatible = false;
+
+            unlockableDef = CreateInstance<UnlockableDef>();
+            unlockableDef.cachedName = string.Format(Delicious.UNLOCKABLE_ITEM_FORMAT, name);
+            unlockableDef.nameToken = nameToken;
+
+            completeMultiplayerUnknownEnding = new AchievementDef
+            {
+                // Match achievement identifiers from FreeItemFriday
+                identifier = "CompleteMultiplayerUnknownEnding",
+                unlockableRewardIdentifier = unlockableDef.cachedName,
+                type = typeof(CompleteMultiplayerUnknownEndingAchievement),
+                serverTrackerType = typeof(CompleteMultiplayerUnknownEndingAchievement.ServerAchievement),
+            };
+            completeMultiplayerUnknownEnding.AutoPopulateTokens();
+            completeMultiplayerUnknownEnding.Register();
+
+            unlockableDef.PopulateUnlockStrings(completeMultiplayerUnknownEnding);
         }
         else DestroyImmediate(this);
     }
@@ -43,15 +70,19 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
     {
         var PickupDeathEye = assets.LoadAssetAsync<GameObject>("PickupDeathEye");
         var texDeathEyeIcon = assets.LoadAssetAsync<Sprite>("texDeathEyeIcon");
+        var texDeathEyeConsumedIcon = assets.LoadAssetAsync<Sprite>("texDeathEyeConsumedIcon");
         var matMSObeliskLightning = Addressables.LoadAssetAsync<Material>("RoR2/Base/mysteryspace/matMSObeliskLightning.mat");
         var matMSObeliskHeart = Addressables.LoadAssetAsync<Material>("RoR2/Base/mysteryspace/matMSObeliskHeart.mat");
         var matMSStarsLink = Addressables.LoadAssetAsync<Material>("RoR2/Base/mysteryspace/matMSStarsLink.mat");
         var matJellyfishLightning = Addressables.LoadAssetAsync<Material>("RoR2/Base/Common/VFX/matJellyfishLightning.mat");
+        var texCompleteMultiplayerUnknownEndingIcon = assets.LoadAssetAsync<Sprite>("texCompleteMultiplayerUnknownEndingIcon");
 
         var MSObelisk = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/mysteryspace/MSObelisk.prefab");
 
         yield return texDeathEyeIcon;
         pickupIconSprite = (Sprite)texDeathEyeIcon.asset;
+        yield return texDeathEyeConsumedIcon;
+        consumedDef.pickupIconSprite = (Sprite)texDeathEyeConsumedIcon.asset;
         yield return PickupDeathEye;
         pickupModelPrefab = (GameObject)PickupDeathEye.asset;
 
@@ -108,11 +139,14 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
         AddDisplayRules(new ItemDisplaySpec(this, displayModelPrefab));
         AddDisplayRules(new ItemDisplaySpec(consumedDef, consumedDisplayModelPrefab));
 
+        yield return texCompleteMultiplayerUnknownEndingIcon;
+        completeMultiplayerUnknownEnding.SetAchievedIcon((Sprite)texCompleteMultiplayerUnknownEndingIcon.asset);
+
         yield return MSObelisk;
         delayedDeathHandler = Ivyl.ClonePrefab(MSObelisk.Result.transform.Find("Stage1FX").gameObject, "DelayedDeathHandler");
         delayedDeathHandler.SetActive(true);
         delayedDeathHandler.AddComponent<NetworkIdentity>();
-        delayedDeathHandler.AddComponent<DelayedDeathEye>();
+        delayedDeathHandler.AddComponent<DelayedDeathEye>().range = range;
         delayedDeathHandler.AddComponent<DestroyOnTimer>().duration = duration;
         DestroyImmediate(delayedDeathHandler.transform.Find("LongLifeNoiseTrails, Bright").gameObject);
         DestroyImmediate(delayedDeathHandler.transform.Find("PersistentLight").gameObject);
@@ -191,52 +225,6 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
         return true;
     }
 
-    public class Consumed : EquipmentDef, Delicious.IStaticContent
-    {
-        public void Awake()
-        {
-            if (Instance)
-            {
-                Instance.consumedDef = this;
-
-                name = string.Format(Delicious.IDENTIFIER_FORMAT, "DeathEyeConsumed");
-                AutoPopulateTokens();
-                canDrop = false;
-                isLunar = true;
-                colorIndex = ColorCatalog.ColorIndex.Unaffordable;
-                appearsInSinglePlayer = false;
-                canBeRandomlyTriggered = false;
-                enigmaCompatible = false;
-            }
-            else DestroyImmediate(this);
-        }
-
-        public IEnumerator LoadAsync(IProgress<float> progressReceiver, AssetBundle assets)
-        {
-            var texDeathEyeConsumedIcon = assets.LoadAssetAsync<Sprite>("texDeathEyeConsumedIcon");
-
-            yield return texDeathEyeConsumedIcon;
-            pickupIconSprite = (Sprite)texDeathEyeConsumedIcon.asset;
-        }
-    }
-
-    public class Unlockable : UnlockableDef
-    {
-        public new void Awake()
-        {
-            if (Instance)
-            {
-                Instance.unlockableDef = this;
-
-                cachedName = string.Format(Delicious.UNLOCKABLE_ITEM_FORMAT, Instance.name);
-                nameToken = Instance.nameToken;
-
-                base.Awake();
-            }
-            else DestroyImmediate(this);
-        }
-    }
-
     public class DelayedDeathEye : MonoBehaviour
     {
         public struct DeathGroup
@@ -245,6 +233,7 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
             public List<CharacterBody> victimBodies;
         }
 
+        public float range;
         public Queue<DeathGroup> deathQueue = new Queue<DeathGroup>();
         public TeamMask cleanupTeams = TeamMask.none;
         private bool hasRunCleanup;
@@ -298,7 +287,7 @@ public partial class GodlessEye : EquipmentDef, Delicious.IStaticContent, Delici
                 for (int i = CharacterBody.readOnlyInstancesList.Count - 1; i >= 0; i--)
                 {
                     CharacterBody body = CharacterBody.readOnlyInstancesList[i];
-                    if (body.teamComponent && cleanupTeams.HasTeam(body.teamComponent.teamIndex) && (body.corePosition - transform.position).sqrMagnitude <= Instance.range * Instance.range)
+                    if (body.teamComponent && cleanupTeams.HasTeam(body.teamComponent.teamIndex) && (body.corePosition - transform.position).sqrMagnitude <= range * range)
                     {
                         DestroyVictim(body);
                     }

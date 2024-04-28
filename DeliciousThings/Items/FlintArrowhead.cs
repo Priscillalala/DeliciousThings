@@ -1,12 +1,12 @@
-﻿using HG;
+﻿using DeliciousThings.Achievements;
+using HG;
 using IvyLibrary;
 using RoR2.Items;
 
 namespace DeliciousThings.Items;
 
-public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicious.IEffectPrefabProvider
+public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicious.IEffectPrefabProvider, Delicious.IUnlockableDefProvider
 {
-    public static FlintArrowhead Instance { get; private set; }
     public static ConfigFile Config => Delicious.ItemsConfig;
 
     const string SECTION = "Flint Arrowhead";
@@ -14,23 +14,40 @@ public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicio
     public readonly float damage = Config.Bind(SECTION, "Flat Damage", 3f).Value;
     public readonly float damagePerStack = Config.Bind(SECTION, "Flat Damage Per Stack", 3f).Value;
 
-    public DamageColorIndex strongerBurn;
+    public AchievementDef burnMultipleEnemies;
+    public static DamageColorIndex strongerBurn;
     public GameObject impactArrowhead;
     public GameObject impactArrowheadStronger;
 
     public IEnumerable<GameObject> EffectPrefabs => [impactArrowhead, impactArrowheadStronger];
+    public UnlockableDef UnlockableDef => unlockableDef;
 
     public void Awake()
     {
         if (enabled)
         {
-            Instance = this;
-
             name = string.Format(Delicious.IDENTIFIER_FORMAT, "Arrowhead");
             AutoPopulateTokens();
             deprecatedTier = ItemTier.Tier1;
             tags = [ItemTag.Damage];
             strongerBurn = ColorsAPI.RegisterDamageColor(new Color32(244, 113, 80, 255));
+
+            unlockableDef = CreateInstance<UnlockableDef>();
+            unlockableDef.cachedName = string.Format(Delicious.UNLOCKABLE_ITEM_FORMAT, name);
+            unlockableDef.nameToken = nameToken;
+
+            burnMultipleEnemies = new AchievementDef
+            {
+                // Match achievement identifiers from FreeItemFriday
+                identifier = "BurnMultipleEnemies",
+                unlockableRewardIdentifier = unlockableDef.cachedName,
+                type = typeof(BurnMultipleEnemiesAchievement),
+                serverTrackerType = typeof(BurnMultipleEnemiesAchievement.ServerAchievement),
+            };
+            burnMultipleEnemies.AutoPopulateTokens();
+            burnMultipleEnemies.Register();
+
+            unlockableDef.PopulateUnlockStrings(burnMultipleEnemies);
 
             Events.GlobalEventManager.onHitEnemyAcceptedServer += GlobalEventManager_onHitEnemyAcceptedServer;
         }
@@ -40,9 +57,9 @@ public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicio
     [SystemInitializer(typeof(DotController))]
     private static void InitAfterDotCatalog()
     {
-        if (Instance)
+        if (strongerBurn != default)
         {
-            DotController.dotDefs[(int)DotController.DotIndex.StrongerBurn].damageColorIndex = Instance.strongerBurn;
+            DotController.dotDefs[(int)DotController.DotIndex.StrongerBurn].damageColorIndex = strongerBurn;
         }
     }
 
@@ -92,6 +109,8 @@ public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicio
         var PickupArrowhead = assets.LoadAssetAsync<GameObject>("PickupArrowhead");
         var DisplayArrowhead = assets.LoadAssetAsync<GameObject>("DisplayArrowhead");
 
+        var texBurnMultipleEnemiesIcon = assets.LoadAssetAsync<Sprite>("texBurnMultipleEnemiesIcon");
+
         var OmniExplosionVFXQuick = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
         var matOmniHitspark3Gasoline = Addressables.LoadAssetAsync<Material>("RoR2/Base/IgniteOnKill/matOmniHitspark3Gasoline.mat");
 
@@ -124,6 +143,9 @@ public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicio
         idrs["idrsVoidSurvivor"].AddDisplayRule(itemDisplay, "ShoulderL", new Vector3(0.063F, 0.289F, 0.052F), new Vector3(13.815F, 321.452F, 169.227F), new Vector3(0.597F, 0.597F, 0.597F));
         idrs["idrsScav"].AddDisplayRule(itemDisplay, "Weapon", new Vector3(3.037F, 8.08F, 2.629F), new Vector3(45.304F, 318.616F, 106.156F), new Vector3(5.5F, 5.5F, 5.5F));
 
+        yield return texBurnMultipleEnemiesIcon;
+        burnMultipleEnemies.SetAchievedIcon((Sprite)texBurnMultipleEnemiesIcon.asset);
+
         yield return OmniExplosionVFXQuick;
         impactArrowhead = Ivyl.ClonePrefab(OmniExplosionVFXQuick.Result, "ImpactArrowhead");
         if (impactArrowhead.TryGetComponent(out EffectComponent effectComponent))
@@ -154,22 +176,5 @@ public partial class FlintArrowhead : ItemDef, Delicious.IStaticContent, Delicio
         impactArrowheadStronger = Ivyl.ClonePrefab(impactArrowhead, "ImpactArrowHeadStronger");
         yield return matOmniHitspark3Gasoline;
         impactArrowheadStronger.transform.GetChild(0).GetComponent<Renderer>().sharedMaterial = matOmniHitspark3Gasoline.Result;
-    }
-
-    public class Unlockable : UnlockableDef
-    {
-        public new void Awake()
-        {
-            if (Instance)
-            {
-                Instance.unlockableDef = this;
-
-                cachedName = string.Format(Delicious.UNLOCKABLE_ITEM_FORMAT, Instance.name);
-                nameToken = Instance.nameToken;
-
-                base.Awake();
-            }
-            else DestroyImmediate(this);
-        }
     }
 }
